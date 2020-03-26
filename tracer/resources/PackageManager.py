@@ -20,6 +20,9 @@
 from __future__ import absolute_import
 
 import itertools
+import os
+
+from pkg_resources import parse_version
 
 
 class PackageManager:
@@ -38,7 +41,7 @@ class PackageManager:
 		self.package_managers = instances
 
 	def names(self):
-		return map(lambda x: x.__class__.__name__ ,self.package_managers)
+		return map(lambda x: x.__class__.__name__, self.package_managers)
 
 	def packages_newer_than(self, unix_time):
 		"""
@@ -61,3 +64,10 @@ class PackageManager:
 	def provided_by(self, app):
 		"""Returns name of package which provides given application"""
 		return self.package_managers[0].provided_by(app)
+
+	def has_updated_kernel(self):
+		if os.path.isdir('/lib/modules/'):
+			for k_version in next(os.walk('/lib/modules/'))[1]:
+				if parse_version(os.uname()[2]) < parse_version(k_version):
+					return True
+		return False

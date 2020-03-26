@@ -22,12 +22,11 @@ from __future__ import absolute_import
 from tracer.resources.system import System
 if System.distribution() in ["fedora", "rhel", "centos", "mageia", "ol"]:
 
-	from os import listdir
+	from os import listdir, uname
 	from .ipackageManager import IPackageManager
 	from tracer.resources.package import Package
 	from tracer.resources.collections import PackagesCollection
 	from tracer.resources.exceptions import LockedDatabase, DatabasePermissions
-	from tracer.resources.applications import Applications
 	import sqlite3
 	import rpm
 	import os
@@ -95,6 +94,21 @@ if System.distribution() in ["fedora", "rhel", "centos", "mageia", "ol"]:
 			except sqlite3.OperationalError as e:
 				raise LockedDatabase() if str(e) == 'database is locked' else DatabasePermissions()
 
+		def has_updated_kernel(self):
+			running_kernel = uname()[2]
+			latest = None
+
+			ts = rpm.TransactionSet()
+			mi = ts.dbMatch("name", "kernel")
+			for headers in mi:
+				if not latest or latest['installtime'] < headers['installtime']:
+					latest = headers
+
+			if latest and running_kernel not in latest['nevra']:
+				return True
+
+			return False
+
 		def package_files(self, pkg_name):
 			"""
 			Returns list of files provided by package
@@ -111,8 +125,6 @@ if System.distribution() in ["fedora", "rhel", "centos", "mageia", "ol"]:
 
 		def load_package_info(self, package):
 			"""From database load informations about given package and set them to it"""
-			description = None
-			category = None
 			if not package:
 				return None
 
