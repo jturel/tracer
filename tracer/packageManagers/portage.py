@@ -78,22 +78,26 @@ if System.distribution() == "gentoo":
 
 		def load_package_info(self, package):
 			"""From database load informations about given package and set them to it"""
-			description = None
 			if not package:
 				return None
 
-			category = package.name.split('/')[0]
-			process = subprocess.Popen(['eix', '-e', package.name], stdout=subprocess.PIPE)
+			package.category = package.name.split('/')[0]
+
+			process = subprocess.Popen(['eix', '-I', '-e', package.name], stdout=subprocess.PIPE)
 			out = process.communicate()[0]
 			out = out.decode().split('\n')
 
 			for line in out:
 				line = line.strip()
 				if line.startswith("Description:"):
-					description = line.split("Description:")[1].strip()
+					package.description = line.split("Description:")[1].strip()
+				if line.startswith("Installed versions:"):
+					"""
+					Example:
+					Installed versions:  4.6(00:53:29 12/30/19)(magic ncurses nls spell split-usr unicode -debug -justify -minimal -slang -static)
+					"""
+					package.version = line.split('Installed versions:')[1].split('(')[0].strip()
 
-			package.description = description
-			package.category = category
 
 		def provided_by(self, app):
 			"""Returns a package which provides given application"""

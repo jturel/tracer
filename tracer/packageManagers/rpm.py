@@ -27,7 +27,6 @@ if System.distribution() in ["fedora", "rhel", "centos", "mageia", "ol"]:
 	from tracer.resources.package import Package
 	from tracer.resources.collections import PackagesCollection
 	from tracer.resources.exceptions import LockedDatabase, DatabasePermissions
-	from tracer.resources.applications import Applications
 	import sqlite3
 	import rpm
 	import os
@@ -111,16 +110,21 @@ if System.distribution() in ["fedora", "rhel", "centos", "mageia", "ol"]:
 
 		def load_package_info(self, package):
 			"""From database load informations about given package and set them to it"""
-			description = None
-			category = None
 			if not package:
 				return None
 
 			ts = rpm.TransactionSet()
 			mi = ts.dbMatch("name", package.name)
-			package_hdr = next(mi)
+
+			if len(mi) == 0:
+				return
+
+			package_hdr = sorted(mi, reverse=True)[0]
+
 			package.description = package_hdr[rpm.RPMTAG_SUMMARY].decode()
 			package.category = package_hdr[rpm.RPMTAG_GROUP].decode()
+			package.version = package_hdr[rpm.RPMTAG_VERSION].decode()
+			package.nvra = package_hdr[rpm.RPMTAG_NVRA].decode()
 
 		def provided_by(self, app):
 			"""Returns name of package which provides given application"""

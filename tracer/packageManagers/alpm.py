@@ -68,6 +68,7 @@ if System.distribution() in ["arch", "archarm"]:
 
 			package.description = pkg.desc
 			package.modified = pkg.installdate
+			package.version = pkg.version
 			# Don't have categories
 
 		def provided_by(self, app):

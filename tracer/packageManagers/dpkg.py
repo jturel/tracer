@@ -79,17 +79,15 @@ if System.distribution() == "debian":
 
 		def load_package_info(self, package):
 			"""From database load informations about given package and set them to it"""
-			description = None
-
 			process = subprocess.Popen(['dpkg', '-s', package.name], stdout=subprocess.PIPE)
 			out = process.communicate()[0]
 			out = out.decode().split('\n')
 
 			for line in out:
 				if line.startswith("Description:"):
-					description = line.split("Description:")[1].strip()
-
-			package.description = description
+					package.description = line.split("Description:")[1].strip()
+				if line.startswith("Version:"):
+					package.version = line.split("Version:")[1].strip()
 
 		def provided_by(self, app):
 			"""Returns name of package which provides given application"""

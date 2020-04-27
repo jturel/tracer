@@ -26,10 +26,10 @@ import pwd
 import importlib
 import platform
 import psutil
+import re
 from sys import version_info
 from tracer.resources.PackageManager import PackageManager
 from tracer.resources.processes import Process
-
 
 class System(object):
 
@@ -111,6 +111,23 @@ class System(object):
 	@staticmethod
 	def python_version():
 		return "{}.{}.{}".format(version_info.major, version_info.minor, version_info.micro)
+
+	@staticmethod
+	def kernel_version():
+		version = os.uname()[2]
+		"""
+		On non-Red Hat distributions the value of uname -r is not a match or substring of the kernel package version.
+		For those distros, return the version represented by x.y.z
+		"""
+		if System.distribution() not in ['rhel', 'centos', 'fedora']:
+			matcher = re.findall("\d+.\d+.\d+", version)
+			version = matcher[0]
+		return version
+
+	@staticmethod
+	def kernel_packages():
+	        """ TODO: infer kernel package from current distribution """
+		return ['kernel', 'linux', 'linux-generic', 'gentoo-kernel']
 
 	@staticmethod
 	def user():
